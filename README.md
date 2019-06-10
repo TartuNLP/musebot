@@ -12,3 +12,10 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
 * googletrans (for translating the response)
 * sklearn
 * numpy
+
+## Usage demo:
+    import polybot
+    #jason, please continue
+
+## Adding a bot:
+    #jason, that's also up to you
