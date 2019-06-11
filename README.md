@@ -57,8 +57,8 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
 ## Usage demo:
     import polybot
     
-    bots = [timebot]            # insert the bots in the list 
-    c = polybot.Conversation(bots)      # call the Conversation object
-    c.talk2me()                 # talk with the bots!
+    bots = [timebot]                         # insert the bots in the list 
+    c = polybot.Conversation(bots)           # call the Conversation object
+    c.talk2me()                              # talk with the bots!
 
 
