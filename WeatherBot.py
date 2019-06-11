@@ -4,8 +4,9 @@
 # In[1]:
 
 
-import import_ipynb
-from PolyBot import *
+from polybot import *
+import requests
+from bs4 import BeautifulSoup
 
 
 # In[30]:
@@ -187,6 +188,8 @@ weatherbot = PolyBot(['rain', 'sun', 'snow', 'weather', 'sun', 'hailstorm', 'fog
                  'EN',
                 weatbot.Answer_Weather,
                  bigrams=[('che', 'tempo')],
+                     boost =2,
                 bigram_lang='IT',
-                 bigram_cutoff = 1.3)
+                 bigram_cutoff = 1.3,
+                bigram_boost = 2)
 

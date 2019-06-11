@@ -4,8 +4,7 @@
 # In[3]:
 
 
-import import_ipynb
-get_ipython().run_line_magic('time', 'from PolyBot import*')
+from polybot import*
 
 
 # In[19]:
@@ -133,7 +132,7 @@ class TravelBot(Answers):
 
         if lang != 'en':
             if lang == 'ru':
-                print("Я нахожу лучший путь от {} до {} {}".format(leaving, arriving, day))
+                print("BOT: Я нахожу лучший путь от {} до {} {}".format(leaving, arriving, day))
             else:
                 print("BOT:", translator.translate("I am Finding the best way to go from {} to {} {}".format(leaving, arriving, day), dest=lang).text)
 

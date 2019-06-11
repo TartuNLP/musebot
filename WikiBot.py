@@ -4,8 +4,7 @@
 # In[1]:
 
 
-import import_ipynb
-from PolyBot import *
+from polybot import *
 import wikipedia
 
 
@@ -119,11 +118,5 @@ wikibot = PolyBot(['wikipedia', 'meaning', 'mean', 'sense'],
                  'EN',
                 wbot.Answer_Wiki,
                  bigrams=[('what', 'is'), ('where', 'is'), ('who', 'is')],
-                 bigram_cutoff = 0.8)
-
-
-# In[ ]:
-
-
-
+                 bigram_cutoff = 0.9)
 
