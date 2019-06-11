@@ -50,7 +50,8 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
                     b2_lang  = 'IT',             # additional bigrams keywords' language -> str, default = keywords' language
                     b2_cutoff = 0.8,             # additinoal bigrams threshold -> int, default = 1.8   
                     b2_boost=1,                  # additional bigrams boost -> int, default = 1
-                    outputlangs= ['EN','ES','IT','DE'], #languages in which we expect a response -> list of str, default = all languages
+                    outputlangs= 
+                    ['EN','ES','IT','DE'],       #languages in which we expect a response -> list of str, default = all languages
                     travel = False)          # captures if the user wants to travel from a place to another one -> bool, default = False  
                     
 
