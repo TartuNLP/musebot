@@ -17,8 +17,9 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
     import polybot
     
     # define the answer of the bot. The answer requires a NER dictionary as an argument
+    
     def answer_time(self, NER_dict):
-        
+    
         language = NER_dict['language']            # 'language' refers to the input language identified by the bot
         
         if language == 'EN':
@@ -38,7 +39,6 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
     timebot = PolyBot(['time', 'hours', 'late'], # unigram keywords -> list of str
                    'EN',                         # keywords' language  -> str
                     answer_time,                 # answer of the bot  -> function
-                    
                                                  DEFAULT ARGUMENTS
                     cutoff = 0.65,               # threshold for the keyword matching -> int, default = 0.43
                     boost = 0,                   # boost (add additional weights to a bot confidence) -> int, default = 0
@@ -57,8 +57,8 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
 ## Usage demo:
     import polybot
     
-    bots = [timebot]        # insert the bots in the list 
-    c = Conversation(bots)  # call the Conversation object
-    c.talk2me()             # talk with the bots!
+    bots = [timebot]            # insert the bots in the list 
+    c = Conversation(bots)      # call the Conversation object
+    c.talk2me()                 # talk with the bots!
 
 
