@@ -10,8 +10,7 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
 ## Dependencies:
 * polyglot (for multilingual NER)
 * googletrans (for translating the response)
-* sklearn
-* numpy
+* sklearn, numpy, icu, pycld2, morfessor, selenium (required by polyglot)
 
 ## Adding a bot:
     import polybot
