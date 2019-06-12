@@ -29,7 +29,7 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
     import polybot
     
     # define the answer of the bot. The answer requires a NER dictionary as an argument
-    def answer_time(self, NER_dict):
+    def answer_time(NER_dict):
     
         language = NER_dict['language']            # 'language' refers to the input language identified by the bot
         
