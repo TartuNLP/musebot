@@ -61,7 +61,8 @@ class Vectors():
 #  This can take a long time (5 minutes more or less) we upload and create the vectors
 CLWEs = Vectors(['wiki.multi.en.vec.txt', 'wiki.multi.it.vec.txt', 'wiki.multi.es.vec.txt', 'wiki.multi.et.vec.txt',
                  'wiki.multi.ru.vec.txt', 'wiki.multi.de.vec.txt' ])
-get_ipython().run_line_magic('time', 'all_vectors = CLWEs.paths()')
+#get_ipython().run_line_magic('time', 'all_vectors = CLWEs.paths()')
+all_vectors = CLWEs.paths()
 
 
 # In[10]:
