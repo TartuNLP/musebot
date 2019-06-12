@@ -12,27 +12,31 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
 * googletrans (for translating the response)
 * sklearn, numpy, icu, pycld2, morfessor, selenium (required by polyglot)
 
-## Adding a bot:
+
+## Usage demo:
+    import polybot
+    from TimeBot import timebot
+    from WikiBot import wikibot
+    
+    bots = [timebot, wikibot]                # insert the bots in the list 
+    
+    c = polybot.Conversation(bots)           # call the Conversation object
+    c.talk2me()                              # talk with the bots!
+
+
+
+## Adding a new bot:
     import polybot
     
     # define the answer of the bot. The answer requires a NER dictionary as an argument
-    
     def answer_time(self, NER_dict):
     
         language = NER_dict['language']            # 'language' refers to the input language identified by the bot
         
-        if language == 'EN':
-            print("BOT: It's", datetime.now().strftime("%H:%M"))
-
-        elif language == 'ES':
-            print ("BOT: Son las", datetime.now().strftime("%H:%M"))
-
-        elif language == 'IT':
-            print("BOT: Sono le", datetime.now().strftime("%H:%M"))
+        responses = { "EN": "It's {0}", "ES": "Son las {0}", "IT": "Sono le {0}", "DE": "Es ist {0}" }
         
-        elif language == 'DE':
-            print("BOT: Es ist", datetime.now().strftime("%H:%M"))
-        
+        if language in responses:
+            print("BOT: " + responses[language].format(datetime.now().strftime("%H:%M")))        
     
     # call the Polybot object                    REQUIRED ARGUMENTS
     timebot = PolyBot(['time', 'hours', 'late'], # unigram keywords -> list of str
@@ -53,12 +57,3 @@ Cross-lingual chatbot creation platform. The input requests are matched to keywo
                     ['EN','ES','IT','DE'],       #languages in which we expect a response -> list of str, default = all languages
                     travel = False)          # captures if the user wants to travel from a place to another one -> bool, default = False  
                     
-
-## Usage demo:
-    import polybot
-    
-    bots = [timebot]                         # insert the bots in the list 
-    c = polybot.Conversation(bots)           # call the Conversation object
-    c.talk2me()                              # talk with the bots!
-
-
