@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[7]:
+# In[296]:
 
 
 # Import packages
@@ -12,13 +12,13 @@ import re
 import polyglot
 from polyglot.downloader import downloader
 from polyglot.text import Text
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+#from selenium import webdriver
+#from selenium.webdriver.chrome.options import Options
 from googletrans import Translator
 translator = Translator()
 
 
-# In[201]:
+# In[307]:
 
 
 class Vectors():
@@ -55,35 +55,21 @@ class Vectors():
         return dict_tables
 
 
-# In[9]:
-
-
-#  This can take a long time (5 minutes more or less) we upload and create the vectors
-CLWEs = Vectors(['wiki.multi.en.vec.txt', 'wiki.multi.it.vec.txt', 'wiki.multi.es.vec.txt', 'wiki.multi.et.vec.txt',
-                 'wiki.multi.ru.vec.txt', 'wiki.multi.de.vec.txt' ])
-#get_ipython().run_line_magic('time', 'all_vectors = CLWEs.paths()')
-all_vectors = CLWEs.paths()
-
-
-# In[10]:
-
-
-def cos_sim (lang1, w1, lang2, w2):
-    cos_sim = cosine_similarity(all_vectors[lang1][w1].reshape(1,300), all_vectors[lang2][w2].reshape(1,300))
-    return cos_sim
-
-
-# In[202]:
+# In[308]:
 
 
 class Keywords():
     def __init__(self, keywords):
         self.keywords = keywords
-
+        
     def make_keywords(self, table_lang):
+        
         key_dict = dict()
-        for k in self.keywords:
-            key_dict[k] = table_lang[k]
+        try:
+            for k in self.keywords:
+                key_dict[k] = table_lang[k]
+        except: 
+            print('Keyword {''} is OOV'.format(k))
         return key_dict
     
     def make_empty_dictionaries(self):
@@ -99,12 +85,30 @@ class Keywords():
         return similarities_per_language
 
 
-# In[305]:
+# In[301]:
+
+
+CLWEs = Vectors(['wiki.multi.en.vec.txt', 'wiki.multi.it.vec.txt', 'wiki.multi.es.vec.txt', 'wiki.multi.et.vec.txt',
+                 'wiki.multi.ru.vec.txt', 'wiki.multi.de.vec.txt' ])
+
+#CLWEs = Vectors(['wiki.multi.en.vec.txt', 'wiki.multi.it.vec.txt','wiki.multi.es.vec.txt', 'wiki.multi.et.vec.txt' ])
+all_vectors = CLWEs.paths()
+
+
+# In[309]:
+
+
+def cos_sim (lang1, w1, lang2, w2):
+    cos_sim = cosine_similarity(all_vectors[lang1][w1].reshape(1,300), all_vectors[lang2][w2].reshape(1,300))
+    return cos_sim
+
+
+# In[402]:
 
 
 class MakeBot():
-   
-    # Function that captures the highest similarity within the token and the keywords for a language
+        
+            # Function that captures the highest similarity within the token and the keywords for a language
     def highest_similarity_for_keyword(self, empty_dictionaries, dict_multi_vectors, key, value):
         last_status = empty_dictionaries[key]
         similarity = cosine_similarity(dict_multi_vectors.reshape(1,300), value)
@@ -169,16 +173,19 @@ class MakeBot():
     def compute_highest_token(self, bot_dictionary, empty_dictionaries, cutoff,  dict_multi_vectors,
                               highest_token_dict, multibot_dict):
        
-        #bot dictionary is the dictionary of the CLWEs for the keywords selected
-        for key, value in bot_dictionary.items():
-            value = value.reshape(1,300)
-            # we keep in the dict the value that had the highest cosine similarity between key and CLWE
-            sorted_simil = self.highest_sim_over_language(empty_dictionaries, dict_multi_vectors, key, value, multibot_dict)
-        
-        language = sorted_simil[0][0][1]
-        # get the highest key-value pair
-        if sorted_simil[0][1][0][0] > cutoff:
-            highest_token_dict[sorted_simil[0][0][0]] = sorted_simil[0][1][0][0] 
+        try:
+            #bot dictionary is the dictionary of the CLWEs for the keywords selected
+            for key, value in bot_dictionary.items():
+                value = value.reshape(1,300)
+                # we keep in the dict the value that had the highest cosine similarity between key and CLWE
+                sorted_simil = self.highest_sim_over_language(empty_dictionaries, dict_multi_vectors, key, value, multibot_dict)
+
+            language = sorted_simil[0][0][1]
+            # get the highest key-value pair
+            if sorted_simil[0][1][0][0] > cutoff:
+                highest_token_dict[sorted_simil[0][0][0]] = sorted_simil[0][1][0][0] 
+        except:
+            language = None
         return language
     
     
@@ -189,7 +196,7 @@ class MakeBot():
             similarity = cosine_similarity(dict_multi_vectors[language].reshape(1,300), value)
             if similarity[0][0] > cutoff:
                 confidence.append(similarity[0][0] + boost)
-                
+    
     def token2multi_vectors(self, token):
         UNK = np.zeros((1, 300))
         dict_vect = dict()
@@ -198,14 +205,14 @@ class MakeBot():
                 dict_vect[k] = v[token].reshape(1,300)
             except:
                 dict_vect[k] = UNK
-        return dict_vect  
+        return dict_vect 
 
 
-# In[306]:
+# In[403]:
 
 
-class PolyBot():
-    def __init__(self, keywords, kw_lang, answer, cutoff=0.43, boost=0, all_lang=None, bigrams=None, bigram_lang=None,
+class PolyBot(MakeBot):
+    def __init__(self, keywords, kw_lang, answer, cutoff=0.43, boost=0, OOV=None, bigrams=None, bigram_lang=None,
     bigram_cutoff = 1.8, bigram_boost = 1, b2=None, b2_lang=None, b2_cutoff=1.8, b2_boost=1, outputlangs=None, travel=False):
     
         self.keywords = keywords
@@ -216,7 +223,6 @@ class PolyBot():
         self.bigram_lang = bigram_lang
         self.cutoff = cutoff
         self.boost = boost
-        self.all_lang = all_lang
         self.bigram_cutoff = bigram_cutoff
         self.bigram_boost = bigram_boost
         self.b2 = b2
@@ -224,9 +230,10 @@ class PolyBot():
         self.b2_cutoff = b2_cutoff
         self.b2_boost = b2_boost
         self.k = Keywords(self.keywords)
-        self.m = MakeBot()
         self.outputlangs = outputlangs
         self.travel = travel
+        self.OOV = OOV
+        
         
         if self.bigram_lang == None:
             self.bigram_lang = self.kw_lang
@@ -239,7 +246,7 @@ class PolyBot():
             for i in range(len(self.outputlangs)):
                 output_languages[self.outputlangs[i]] = self.dict_CLWEs[self.outputlangs[i]] 
             self.dict_CLWEs = output_languages
-
+    
         
     def prepare_bot(self):
         empty_dictionaries = self.k.empty_dictionaries(self.dict_CLWEs)
@@ -249,9 +256,9 @@ class PolyBot():
         return  empty_dictionaries, confidence, multibot_dict, highest_token
         
     def language_identifier (self, empty_dictionaries, dict_multi_vectors, highest_token_dict, multibot_dict):
-        bot_dictionary = self.k.make_keywords(self.dict_CLWEs[self.kw_lang]) 
+        bot_dictionary= self.k.make_keywords(self.dict_CLWEs[self.kw_lang]) 
         
-        language = self.m.compute_highest_token(bot_dictionary, empty_dictionaries, self.cutoff,
+        language = self.compute_highest_token(bot_dictionary, empty_dictionaries, self.cutoff,
                                      dict_multi_vectors, highest_token_dict, multibot_dict)
         
         return language
@@ -259,7 +266,8 @@ class PolyBot():
     
     def get_confidence(self, dict_multivector, confidence, multibot_dict, language):
         bot_dictionary = self.k.make_keywords(self.dict_CLWEs[self.kw_lang])
-        self.m.compute_confidence(language, bot_dictionary, dict_multivector, multibot_dict, confidence, self.cutoff, self.boost)
+        self.compute_confidence(language, bot_dictionary, dict_multivector, multibot_dict, confidence, self.cutoff,
+                                  self.boost)
     
     def else_language(self, dict_multi_vectors, dict_next_multivector, bi_lang):
         source_lang = []
@@ -317,10 +325,11 @@ class PolyBot():
     
 
 
-# In[307]:
+# In[444]:
 
 
-class Answers():
+class Answers(MakeBot):
+    
     
     def check_bigram_city(self, CITY):
         if CITY != None:
@@ -367,7 +376,7 @@ class Answers():
         city = input('YOU: ')
         tok = city.lower().split()
         for i in range(len(tok)):
-            vect_dict = self.m.token2multi_vectors(tok[i])
+            vect_dict = self.token2multi_vectors(tok[i])
             for k,v in vect_dict.items():
                 if lang == 'en':
                     if cosine_similarity(v, self.table_lang[parola].reshape(1,300)) > 0.8:
@@ -422,16 +431,16 @@ class Answers():
         return today, tomorrow
 
 
-# In[362]:
+# In[464]:
 
 
-class Conversation(PolyBot):
+class Conversation(PolyBot, MakeBot):
     
     def __init__(self, bots, baseline=False):
-        self.m = MakeBot()
+        
         self.bots = bots
-        self.a = Answers()
         self.baseline = baseline
+        self.a = Answers()
 
     
     def NER(self, human):
@@ -568,12 +577,13 @@ class Conversation(PolyBot):
                     lang = identif.lang.upper()
                     if lang == 'ESPT':
                         lang = 'ES'
-                    print(lang, 'IDENTIFIED LANGUAGE')
                     human = translator.translate(human, dest='de')
-                    print(human.text, 'TRANSLATED INPUT')
                     human = human.text
             
             PER,LOC, ORG = self.NER(human)
+            #PER = None
+            #LOC = None
+            #ORG = None
             leaving = None
             arriving = None
             
@@ -631,8 +641,8 @@ class Conversation(PolyBot):
                 next_token = hum[i+1].lower()
                 
                 # Assign the multilingual vectors to the input words
-                vect_dict = self.m.token2multi_vectors(token)
-                next_vect_dict= self.m.token2multi_vectors(next_token)
+                vect_dict = self.token2multi_vectors(token)
+                next_vect_dict= self.token2multi_vectors(next_token)
                 today,tomorrow= self.a.find_TodayTomorrow(vect_dict)
                 NER_dict['today'] =  today
                 NER_dict['tomorrow'] =  tomorrow
@@ -646,6 +656,11 @@ class Conversation(PolyBot):
                     bots_dict['language_bot'+str(i)] = language_bot
                     if self.baseline == True:
                         bots_dict['language_bot'+str(i)] = lang
+                    
+                    if bot.OOV != None:
+                        for ii in range(len(bot.OOV)):
+                            if bot.OOV[ii] == token:
+                                confidence.append(1.5)
      
                     if bot.bigrams != None:
                         for ii in range(len(bot.bigrams)):
@@ -752,8 +767,224 @@ class Conversation(PolyBot):
                             next_token = hum[ii+1].lower()
 
                             # Assign the multilingual vectors to the input words
-                            vect_dict = self.m.token2multi_vectors(token)
-                            next_vect_dict= self.m.token2multi_vectors(next_token)
+                            vect_dict = self.token2multi_vectors(token)
+                            next_vect_dict= self.token2multi_vectors(next_token)
+                            language_bot = NER_dict['language']
+                            leaving =  NER_dict['leaving']
+                            arriving = NER_dict['arriving']
+                            CITY = NER_dict['CITY']
+                            CITY2 = NER_dict['CITY2']
+                            self.kw_lang = bot.kw_lang
+
+                            leaving, arriving = self.travel_score(leaving, arriving, CITY, CITY2, 
+                                            vect_dict, next_vect_dict, next_token, language_bot)
+
+                            if leaving != None:
+                                bots_dict['leaving'+str(i)] = leaving
+
+                            if arriving != None:
+                                bots_dict['arriving'+str(i)] = arriving 
+
+                        try:   
+                            NER_dict['leaving'] = bots_dict['leaving'+str(i)]
+                        except:
+                            pass
+
+                        try:
+                            NER_dict['arriving'] = bots_dict['arriving'+str(i)]
+                        except:
+                            pass
+        
+                    answer(NER_dict)
+                    OFF.append('The end')
+            try:  
+                if OFF[0] == 'The end':
+                    pass
+            except:
+                print("BOT: Sorry, I didn't understand, could you repeat in other words?")
+                
+                
+                
+    def test(self, queries):
+        
+        NER_dict = dict()
+        
+        #PER,LOC, ORG = self.NER(human)
+        PER = None
+        LOC = None
+        ORG = None
+        leaving = None
+        arriving = None
+
+        PERSON = self.find_people(PER)
+        CITY, CITY2 = self.find_city(LOC)
+        
+        for query in queries:
+            human = query.split()
+            h = [re.sub(r'[^\w]', '', tok) for tok in human]
+            hum = []
+
+            for tok in human:
+                hum.append(re.sub(r'[^\w]', '', tok))
+            hum.append('EOS')
+
+            NER_dict['people'] = PER
+            NER_dict['cities'] = LOC
+            NER_dict['organizations'] = ORG
+            NER_dict['leaving'] = leaving
+            NER_dict['arriving'] = arriving
+            NER_dict['CITY'] = CITY
+            NER_dict['CITY2'] = CITY2
+            NER_dict['PERSON'] = PERSON
+            NER_dict['queries'] = query
+
+       
+ #### CREATE DICTIONARIES ################################################################################################
+            bots_dict = dict()
+            for i, bot in enumerate(self.bots):
+                empty_dictionaries, confidence, multi, highest_token = bot.prepare_bot()
+                bots_dict['confidence'+str(i)] = confidence
+                bots_dict['empty_dictionaries'+str(i)] = empty_dictionaries
+                bots_dict['multi_dict'+str(i)] = multi
+                bots_dict['highest_token'+str(i)] = highest_token
+                bots_dict['answer'+str(i)] = bot.answer
+                
+       
+            for i in range (len(hum)-1):
+                # normalize the input
+                token = hum[i].lower()
+                next_token = hum[i+1].lower()
+                
+                # Assign the multilingual vectors to the input words
+                vect_dict = self.token2multi_vectors(token)
+                next_vect_dict= self.token2multi_vectors(next_token)
+                today,tomorrow= self.a.find_TodayTomorrow(vect_dict)
+                NER_dict['today'] =  today
+                NER_dict['tomorrow'] =  tomorrow
+
+                for i,bot in enumerate(self.bots):
+                    empty_dictionaries = bots_dict['empty_dictionaries'+str(i)]
+                    confidence =  bots_dict['confidence'+str(i)]
+                    highest_token =  bots_dict['highest_token'+str(i)]
+                    multi_dict = bots_dict['multi_dict'+str(i)]
+                    language_bot = bot.language_identifier(empty_dictionaries, vect_dict, highest_token, multi_dict)
+                    bots_dict['language_bot'+str(i)] = language_bot
+                    if self.baseline == True:
+                        bots_dict['language_bot'+str(i)] = lang
+                        
+                    
+                    if bot.OOV != None:
+                        for ii in range(len(bot.OOV)):
+                            if bot.OOV[ii] == token:
+                                confidence.append(1.5)
+     
+                    if bot.bigrams != None:
+                        for ii in range(len(bot.bigrams)):
+                            #  w1, w2, dict_multivector, dict_next_multivector, confidence
+                            w1 = bot.bigrams[ii][0]
+                            w2 = bot.bigrams[ii][1]
+                            is_true, langs, scores= bot.compute_bigrams(w1,w2, vect_dict, next_vect_dict, confidence, 
+                                                bot.bigram_lang, bot.bigram_cutoff, bot.bigram_boost)
+                            
+                            if is_true == True:
+                                bots_dict[w1 + '_' + w2] = is_true
+                                for iii in range(len(langs)):
+                                    try:
+                                        if scores[iii] >  bots_dict['bigram_score'+str(i)]:
+                                            bots_dict['language_bigram'+str(i)] = langs[iii]
+                                    except:
+                                        bots_dict['bigram_score'+str(i)] = scores[iii]
+                                        bots_dict['language_bigram'+str(i)] = langs[iii]
+                                
+                            
+                    if bot.b2 != None:
+                        for ii in range(len(bot.b2)):
+                            w1 = bot.b2[ii][0]
+                            w2 = bot.b2[ii][1]
+                            is_true, langs, scores = bot.compute_bigrams(w1,w2, vect_dict, next_vect_dict, confidence,
+                                                    bot.b2_lang, bot.b2_cutoff, bot.b2_boost)
+                            
+                            
+                            if is_true == True:
+                                bots_dict[w1 + '_' + w2] = is_true
+                                for iii in range(len(langs)):
+                                    try:
+                                        if scores[iii] >  bots_dict['bigram_score'+str(i)]:
+                                            bots_dict['language_bigram'+str(i)] = langs[iii]
+                                    except:
+                                        bots_dict['bigram_score'+str(i)] = scores[iii]
+                                        bots_dict['language_bigram'+str(i)] = langs[iii]
+                                        
+                      
+                    bot.get_confidence(vect_dict, confidence, multi_dict, bots_dict['language_bot'+str(i)])   
+
+            all_confs = dict()
+            for i, bot in enumerate(self.bots):
+                confidence =  bots_dict['confidence'+str(i)]
+                summed_conf = sum(confidence)
+                all_confs['confidence'+str(i)] = summed_conf
+                
+
+            sorted_confs = sorted(all_confs.items(), key=operator.itemgetter(1), reverse=True)
+
+            
+            try:
+                if sorted_confs[0][1] == sorted_confs[1][1]:
+                    to_increase = sorted_confs[0][0]
+                    for i, bot in enumerate(self.bots):
+                        if 'confidence'+str(i) == to_increase:
+                            bots_dict['confidence'+str(i)] = [bots_dict['confidence'+str(i)][0]+0.1]
+            except:
+                pass
+                        
+            OFF =[]
+            for i, bot in enumerate(self.bots):
+                confidence =  bots_dict['confidence'+str(i)]
+                summed_conf = sum(confidence)
+                answer = bots_dict['answer'+str(i)]
+                self.travel = bot.travel
+                
+                if summed_conf + 0.1 == sorted_confs[0][1]+0.1 and summed_conf>0:
+                    NER_dict['highest_token'] =  bots_dict['highest_token'+str(i)]
+                    NER_dict['language'] = bots_dict['language_bot'+str(i)]
+                    if self.baseline == False:
+                        try:
+                            NER_dict['language'] = bots_dict['language_bigram'+str(i)]
+                        except:
+                            pass
+                    
+                    NER_dict['highest_keywords'] = bots_dict['empty_dictionaries'+str(i)]
+                    
+                    if bot.bigrams != None:
+                        for i in range(len(bot.bigrams)):
+                            #  w1, w2, dict_multivector, dict_next_multivector, confidence
+                            w1 = bot.bigrams[i][0]
+                            w2 = bot.bigrams[i][1]
+                            try:
+                                NER_dict[w1 + '_' + w2] = bots_dict[w1 + '_' + w2] 
+                            except:
+                                NER_dict[w1 + '_' + w2] = None
+                    
+                    if bot.b2 != None:
+                        for i in range(len(bot.b2)):
+                            #  w1, w2, dict_multivector, dict_next_multivector, confidence
+                            w1 = bot.b2[i][0]
+                            w2 = bot.b2[i][1]
+                            try:
+                                NER_dict[w1 + '_' + w2] = bots_dict[w1 + '_' + w2]
+                            except:
+                                NER_dict[w1 + '_' + w2] = None
+                        
+                    
+                    if self.travel == True:
+                        for ii in range (len(hum)-1):
+                            # normalize the input
+                            token = hum[ii].lower()
+                            next_token = hum[ii+1].lower()
+
+                            # Assign the multilingual vectors to the input words
+                            vect_dict = self.token2multi_vectors(token)
+                            next_vect_dict= self.token2multi_vectors(next_token)
                             language_bot = NER_dict['language']
                             leaving =  NER_dict['leaving']
                             arriving = NER_dict['arriving']
